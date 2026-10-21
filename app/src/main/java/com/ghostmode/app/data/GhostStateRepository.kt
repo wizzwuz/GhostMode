@@ -54,9 +54,14 @@ class GhostStateRepository(
     private val timerFireAtFlow = MutableStateFlow(store.getLong(KEY_TIMER_FIRE_AT, NONE))
     private val updateCheckEnabledFlow = MutableStateFlow(store.getBoolean(KEY_UPDATE_CHECK_ENABLED, false))
     private val appliedSnapshotFlow = MutableStateFlow(AppliedSnapshot.fromJson(store.getString(KEY_APPLIED_SNAPSHOT)))
+    private val ghostContactsEnabledFlow = MutableStateFlow(store.getBoolean(KEY_GHOST_CONTACTS_ENABLED, false))
+    private val ghostContactsFlow = MutableStateFlow(loadGhostContacts())
+    private val ghostContactsSilenceOnlyFlow = MutableStateFlow(store.getBoolean(KEY_GHOST_CONTACTS_SILENCE_ONLY, false))
+    private val ghostContactsLogCallsFlow = MutableStateFlow(store.getBoolean(KEY_GHOST_CONTACTS_LOG_CALLS, true))
     private val sessionsFlow = MutableStateFlow(loadSessions())
     private val logEntriesFlow = MutableStateFlow<List<CommandLogEntry>>(emptyList())
     private val sessionsLock = Any()
+    private val contactsLock = Any()
 
     val isOn: StateFlow<Boolean> = isOnFlow.asStateFlow()
     val isOnTimestampMs: StateFlow<Long> = isOnTimestampFlow.asStateFlow()
@@ -71,6 +76,10 @@ class GhostStateRepository(
     val timerFireAtMs: StateFlow<Long> = timerFireAtFlow.asStateFlow()
     val updateCheckEnabled: StateFlow<Boolean> = updateCheckEnabledFlow.asStateFlow()
     val appliedSnapshot: StateFlow<AppliedSnapshot?> = appliedSnapshotFlow.asStateFlow()
+    val ghostContactsEnabled: StateFlow<Boolean> = ghostContactsEnabledFlow.asStateFlow()
+    val ghostContacts: StateFlow<List<GhostContact>> = ghostContactsFlow.asStateFlow()
+    val ghostContactsSilenceOnly: StateFlow<Boolean> = ghostContactsSilenceOnlyFlow.asStateFlow()
+    val ghostContactsLogCalls: StateFlow<Boolean> = ghostContactsLogCallsFlow.asStateFlow()
     val sessions: StateFlow<List<GhostSession>> = sessionsFlow.asStateFlow()
     val logEntries: StateFlow<List<CommandLogEntry>> = logEntriesFlow.asStateFlow()
 
@@ -231,6 +240,90 @@ class GhostStateRepository(
         return array.toString()
     }
 
+    // --- Ghost Contacts (Unavailable Contacts) ---------------------------------------------
+
+    fun setGhostContactsEnabled(enabled: Boolean) {
+        ghostContactsEnabledFlow.value = enabled
+        store.edit { putBoolean(KEY_GHOST_CONTACTS_ENABLED, enabled) }
+    }
+
+    fun setGhostContactsSilenceOnly(silenceOnly: Boolean) {
+        ghostContactsSilenceOnlyFlow.value = silenceOnly
+        store.edit { putBoolean(KEY_GHOST_CONTACTS_SILENCE_ONLY, silenceOnly) }
+    }
+
+    fun setGhostContactsLogCalls(logCalls: Boolean) {
+        ghostContactsLogCallsFlow.value = logCalls
+        store.edit { putBoolean(KEY_GHOST_CONTACTS_LOG_CALLS, logCalls) }
+    }
+
+    fun addGhostContact(name: String, phoneNumber: String): GhostContact {
+        val contact = GhostContact(name = name.trim(), phoneNumber = phoneNumber.trim())
+        updateGhostContacts { current -> current + contact }
+        return contact
+    }
+
+    fun removeGhostContact(id: String) {
+        updateGhostContacts { current -> current.filterNot { it.id == id } }
+    }
+
+    fun toggleGhostContact(id: String) {
+        updateGhostContacts { current ->
+            current.map { if (it.id == id) it.copy(enabled = !it.enabled) else it }
+        }
+    }
+
+    fun setGhostContacts(contacts: List<GhostContact>) {
+        updateGhostContacts { contacts }
+    }
+
+    fun isNumberBlocked(rawIncomingNumber: String): Boolean {
+        if (!ghostContactsEnabledFlow.value) return false
+        val active = ghostContactsFlow.value.filter { it.enabled }
+        if (active.isEmpty()) return false
+        val incomingDigits = rawIncomingNumber.filter { it.isDigit() }
+        if (incomingDigits.isEmpty()) return false
+
+        return active.any { contact ->
+            val contactDigits = contact.phoneNumber.filter { it.isDigit() }
+            if (contactDigits.isEmpty()) false
+            else if (incomingDigits == contactDigits) true
+            else {
+                val minLen = minOf(incomingDigits.length, contactDigits.length)
+                if (minLen >= 7) {
+                    val matchLen = minOf(minLen, 10)
+                    incomingDigits.takeLast(matchLen) == contactDigits.takeLast(matchLen)
+                } else false
+            }
+        }
+    }
+
+    private fun updateGhostContacts(transform: (List<GhostContact>) -> List<GhostContact>) {
+        synchronized(contactsLock) {
+            val updated = transform(ghostContactsFlow.value)
+            ghostContactsFlow.value = updated
+            store.edit { putString(KEY_GHOST_CONTACTS, ghostContactsToJson(updated)) }
+        }
+    }
+
+    private fun loadGhostContacts(): List<GhostContact> {
+        val json = store.getString(KEY_GHOST_CONTACTS) ?: return emptyList()
+        return try {
+            val array = JSONArray(json)
+            List(array.length()) { index ->
+                GhostContact.fromJson(array.getJSONObject(index))
+            }.filterNotNull()
+        } catch (_: JSONException) {
+            emptyList()
+        }
+    }
+
+    private fun ghostContactsToJson(contacts: List<GhostContact>): String {
+        val array = JSONArray()
+        contacts.forEach { array.put(it.toJson()) }
+        return array.toString()
+    }
+
     companion object {
         const val LOG_CAPACITY = 300
         const val PREFS_NAME = "ghost_state"
@@ -255,6 +348,10 @@ class GhostStateRepository(
         private const val KEY_TIMER_FIRE_AT = "timer_fire_at"
         private const val KEY_UPDATE_CHECK_ENABLED = "update_check_enabled"
         private const val KEY_APPLIED_SNAPSHOT = "applied_snapshot"
+        private const val KEY_GHOST_CONTACTS = "ghost_contacts"
+        private const val KEY_GHOST_CONTACTS_ENABLED = "ghost_contacts_enabled"
+        private const val KEY_GHOST_CONTACTS_SILENCE_ONLY = "ghost_contacts_silence_only"
+        private const val KEY_GHOST_CONTACTS_LOG_CALLS = "ghost_contacts_log_calls"
 
         private const val SESSION_CAPACITY = 500
         private const val DEFAULT_SCHEDULE_START = 23 * 60

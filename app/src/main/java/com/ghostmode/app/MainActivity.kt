@@ -2,6 +2,7 @@ package com.ghostmode.app
 
 import android.Manifest
 import android.app.StatusBarManager
+import android.app.role.RoleManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,6 +10,7 @@ import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.ContactsContract
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,6 +42,33 @@ class MainActivity : AppCompatActivity() {
         uri?.let(vm::readImport)
     }
 
+    private val pickContactPhoneLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val uri = result.data?.data ?: return@registerForActivityResult
+        try {
+            contentResolver.query(
+                uri,
+                arrayOf(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val name = cursor.getString(0) ?: "Contact"
+                    val number = cursor.getString(1) ?: ""
+                    if (number.isNotBlank()) {
+                        vm.addGhostContact(name, number)
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            // Permission or resolution error
+        }
+    }
+
+    private val callScreeningRoleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        vm.refreshSystemStatus()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -48,7 +77,13 @@ class MainActivity : AppCompatActivity() {
             onAddTile = ::requestAddTile,
             onOpenUrl = { url -> startActivitySafely(Intent(Intent.ACTION_VIEW, Uri.parse(url))) },
             onImport = { importLauncher.launch(arrayOf(MIME_JSON, "text/plain", "application/octet-stream")) },
-            onExport = { exportLauncher.launch(EXPORT_FILE_NAME) }
+            onExport = { exportLauncher.launch(EXPORT_FILE_NAME) },
+            onPickContact = {
+                val intent = Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
+                pickContactPhoneLauncher.launch(intent)
+            },
+            onRequestRole = ::requestCallScreeningRole,
+            onOpenDialer = ::openDialer
         )
         setContent {
             val dynamicColor by vm.dynamicColor.collectAsStateWithLifecycle()
@@ -99,6 +134,21 @@ class MainActivity : AppCompatActivity() {
             Icon.createWithResource(this, R.drawable.ic_ghost),
             mainExecutor
         ) { result -> vm.onTileRequestResult(result) }
+    }
+
+    private fun requestCallScreeningRole() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val roleManager = getSystemService(RoleManager::class.java)
+            if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)) {
+                val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING)
+                callScreeningRoleLauncher.launch(intent)
+            }
+        }
+    }
+
+    private fun openDialer(code: String) {
+        val uri = Uri.parse("tel:${Uri.encode(code)}")
+        startActivitySafely(Intent(Intent.ACTION_DIAL, uri))
     }
 
     private companion object {

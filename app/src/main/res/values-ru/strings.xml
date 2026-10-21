@@ -302,4 +302,28 @@
     <string name="shortcut_turn_off">Выключить</string>
     <string name="shortcut_timer_1h">На 1 час</string>
     <string name="shortcut_timer_1h_long">Включить на 1 час</string>
+
+    <!-- Призрачные контакты -->
+    <string name="contacts_title">Призрачные контакты</string>
+    <string name="contacts_enable_title">Недоступность для выбранных контактов</string>
+    <string name="contacts_enable_summary">Входящие звонки от этих контактов будут отклоняться как недоступные</string>
+    <string name="contacts_role_required_title">Требуется разрешение на фильтрацию звонков</string>
+    <string name="contacts_role_required_text">Android требует назначить Ghost Mode приложением для фильтрации звонков, чтобы перехватывать и отклонять вызовы.</string>
+    <string name="contacts_section_behavior">Поведение при звонке</string>
+    <string name="contacts_reject_title">Отклонять вызов как недоступный</string>
+    <string name="contacts_reject_summary">Вызовы сразу сбрасываются. При включенной переадресации занятого номера вызывающий услышит «абонент недоступен».</string>
+    <string name="contacts_log_title">Сохранять в журнале вызовов</string>
+    <string name="contacts_log_summary">Отображать заблокированные вызовы в истории звонков</string>
+    <string name="contacts_section_list">Выбранные контакты</string>
+    <string name="contacts_pick_from_contacts">Из контактов</string>
+    <string name="contacts_add_manually">Вручную</string>
+    <string name="contacts_empty_text">Контакты ещё не добавлены. Добавьте контакты или номера выше, чтобы телефон выглядел недоступным для них.</string>
+    <string name="contacts_cfb_guide_title">Как сделать, чтобы абонент слышал «Недоступен»</string>
+    <string name="contacts_cfb_guide_text">При сбросе вызова оператор проверяет переадресацию по занятости (CFB). Чтобы звонящие слышали автоответчик оператора о недоступности, настройте переадресацию командой *67*&lt;номер&gt;#.</string>
+    <string name="contacts_check_cfb">Проверить CFB (*#67#)</string>
+    <string name="contacts_dialog_add_title">Добавить контакт вручную</string>
+    <string name="contacts_name_label">Имя</string>
+    <string name="contacts_phone_label">Номер телефона</string>
+    <string name="settings_contacts_summary_on">Выбрано: %1$d</string>
+    <string name="chip_contacts_active">Контактов: %1$d</string>
 </resources>

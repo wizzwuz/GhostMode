@@ -305,4 +305,28 @@
     <string name="shortcut_turn_off">Turn off</string>
     <string name="shortcut_timer_1h">For 1 hour</string>
     <string name="shortcut_timer_1h_long">Turn on for 1 hour</string>
+
+    <!-- Ghost Contacts -->
+    <string name="contacts_title">Ghost Contacts</string>
+    <string name="contacts_enable_title">Unavailable for selected contacts</string>
+    <string name="contacts_enable_summary">Incoming calls from these contacts will be blocked and rejected as unavailable</string>
+    <string name="contacts_role_required_title">Call Screening permission required</string>
+    <string name="contacts_role_required_text">Android requires Ghost Mode to be set as the Call Screening app to intercept and reject incoming calls.</string>
+    <string name="contacts_section_behavior">Call screening behavior</string>
+    <string name="contacts_reject_title">Reject call as unavailable</string>
+    <string name="contacts_reject_summary">Callers are rejected immediately. With Call Forwarding on Busy, they hear “subscriber unavailable”.</string>
+    <string name="contacts_log_title">Keep in call log</string>
+    <string name="contacts_log_summary">Show blocked calls in your dialer’s call history</string>
+    <string name="contacts_section_list">Selected contacts</string>
+    <string name="contacts_pick_from_contacts">From Contacts</string>
+    <string name="contacts_add_manually">Add manually</string>
+    <string name="contacts_empty_text">No contacts added yet. Add contacts or phone numbers above to make your device unreachable for them.</string>
+    <string name="contacts_cfb_guide_title">How to make callers hear “Unavailable”</string>
+    <string name="contacts_cfb_guide_text">When calls are rejected, your carrier checks Call Forwarding on Busy (CFB). You can forward busy calls to an unavailable or disconnected number by dialling *67*&lt;number&gt;#.</string>
+    <string name="contacts_check_cfb">Check CFB (*#67#)</string>
+    <string name="contacts_dialog_add_title">Add contact manually</string>
+    <string name="contacts_name_label">Name</string>
+    <string name="contacts_phone_label">Phone number</string>
+    <string name="settings_contacts_summary_on">%1$d contact(s) selected</string>
+    <string name="chip_contacts_active">%1$d ghost contact(s)</string>
 </resources>

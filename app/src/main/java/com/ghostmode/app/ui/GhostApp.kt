@@ -45,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ghostmode.app.R
+import com.ghostmode.app.ui.contacts.GhostContactsScreen
 import com.ghostmode.app.ui.home.HomeScreen
 import com.ghostmode.app.ui.presets.PresetsScreen
 import com.ghostmode.app.ui.settings.SettingsScreen
@@ -59,7 +60,7 @@ enum class Tab(val label: Int, val icon: ImageVector, val selectedIcon: ImageVec
     SETTINGS(R.string.nav_settings, Icons.Outlined.Settings, Icons.Filled.Settings)
 }
 
-enum class Page { DIAGNOSTICS, LOG, STATS, ABOUT }
+enum class Page { DIAGNOSTICS, LOG, STATS, ABOUT, CONTACTS }
 
 private enum class Sheet { SCHEDULE, SIM }
 
@@ -69,7 +70,10 @@ data class AppHost(
     val onAddTile: () -> Unit,
     val onOpenUrl: (String) -> Unit,
     val onImport: () -> Unit,
-    val onExport: () -> Unit
+    val onExport: () -> Unit,
+    val onPickContact: () -> Unit,
+    val onRequestRole: () -> Unit,
+    val onOpenDialer: (String) -> Unit
 )
 
 @Composable
@@ -130,6 +134,13 @@ fun GhostApp(vm: MainViewModel, host: AppHost, initialTab: Tab = Tab.HOME, initi
                 Page.LOG -> LogScreen(vm, onBack = ::pop)
                 Page.STATS -> StatsScreen(vm, onBack = ::pop)
                 Page.ABOUT -> AboutScreen(onBack = ::pop, onOpenUrl = host.onOpenUrl)
+                Page.CONTACTS -> GhostContactsScreen(
+                    vm = vm,
+                    onBack = ::pop,
+                    onPickContact = host.onPickContact,
+                    onRequestRole = host.onRequestRole,
+                    onOpenDialer = host.onOpenDialer
+                )
             }
         }
         if (pages.isNotEmpty()) {
@@ -191,6 +202,7 @@ private fun MainTabs(
                     onOpenPresets = { onTabChange(Tab.PRESETS) },
                     onOpenDiagnostics = { onOpen(Page.DIAGNOSTICS) },
                     onOpenStats = { onOpen(Page.STATS) },
+                    onOpenContacts = { onOpen(Page.CONTACTS) },
                     onEditSchedule = { onSheet(Sheet.SCHEDULE) },
                     onEditSim = { onSheet(Sheet.SIM) },
                     onOpenUrl = host.onOpenUrl
@@ -202,6 +214,7 @@ private fun MainTabs(
                     onNotificationToggle = host.onNotificationToggle,
                     onEditSchedule = { onSheet(Sheet.SCHEDULE) },
                     onAddTile = host.onAddTile,
+                    onOpenContacts = { onOpen(Page.CONTACTS) },
                     onOpenDiagnostics = { onOpen(Page.DIAGNOSTICS) },
                     onOpenLog = { onOpen(Page.LOG) },
                     onOpenStats = { onOpen(Page.STATS) },

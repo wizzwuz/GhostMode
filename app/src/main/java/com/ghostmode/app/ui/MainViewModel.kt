@@ -1,9 +1,11 @@
 package com.ghostmode.app.ui
 
 import android.app.Application
+import android.app.role.RoleManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
+import android.os.Build
 import android.os.PowerManager
 import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
@@ -82,6 +84,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val updateState = graph.updates.state
     val logEntries = state.logEntries
 
+    val ghostContactsEnabled = state.ghostContactsEnabled
+    val ghostContacts = state.ghostContacts
+    val ghostContactsSilenceOnly = state.ghostContactsSilenceOnly
+    val ghostContactsLogCalls = state.ghostContactsLogCalls
+
+    private val isCallScreeningRoleHeldFlow = MutableStateFlow(checkCallScreeningRoleHeld())
+    val isCallScreeningRoleHeld: StateFlow<Boolean> = isCallScreeningRoleHeldFlow.asStateFlow()
+
     val needsReapply: StateFlow<Boolean> = combine(state.isOn, state.appliedSnapshot) { _, _ ->
         controller.needsReapply()
     }.stateIn(viewModelScope, SharingStarted.Eagerly, controller.needsReapply())
@@ -114,7 +124,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             isBatteryExempt = power?.isIgnoringBatteryOptimizations(app.packageName) ?: true,
             canScheduleExact = ScheduleManager.canScheduleExact(app)
         )
+        isCallScreeningRoleHeldFlow.value = checkCallScreeningRoleHeld()
     }
+
+    private fun checkCallScreeningRoleHeld(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return true
+        val roleManager = getApplication<Application>().getSystemService(RoleManager::class.java) ?: return false
+        return roleManager.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)
+    }
+
+    fun setGhostContactsEnabled(enabled: Boolean) = state.setGhostContactsEnabled(enabled)
+    fun setGhostContactsSilenceOnly(silenceOnly: Boolean) = state.setGhostContactsSilenceOnly(silenceOnly)
+    fun setGhostContactsLogCalls(logCalls: Boolean) = state.setGhostContactsLogCalls(logCalls)
+    fun addGhostContact(name: String, phoneNumber: String) = state.addGhostContact(name, phoneNumber)
+    fun removeGhostContact(id: String) = state.removeGhostContact(id)
+    fun toggleGhostContact(id: String) = state.toggleGhostContact(id)
 
     /** Result of `StatusBarManager.requestAddTileService`; silence would look like a broken button. */
     fun onTileRequestResult(result: Int) {

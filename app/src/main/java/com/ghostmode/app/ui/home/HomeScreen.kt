@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.BatteryAlert
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.NewReleases
+import androidx.compose.material.icons.outlined.PersonOff
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.SimCard
@@ -79,6 +80,7 @@ fun HomeScreen(
     onOpenPresets: () -> Unit,
     onOpenDiagnostics: () -> Unit,
     onOpenStats: () -> Unit,
+    onOpenContacts: () -> Unit,
     onEditSchedule: () -> Unit,
     onEditSim: () -> Unit,
     onOpenUrl: (String) -> Unit
@@ -93,6 +95,8 @@ fun HomeScreen(
     val activePresetId by vm.activePresetId.collectAsStateWithLifecycle()
     val snapshot by vm.appliedSnapshot.collectAsStateWithLifecycle()
     val simMode by vm.simSlotMode.collectAsStateWithLifecycle()
+    val contactsEnabled by vm.ghostContactsEnabled.collectAsStateWithLifecycle()
+    val contacts by vm.ghostContacts.collectAsStateWithLifecycle()
     val timerFireAt by vm.timerFireAtMs.collectAsStateWithLifecycle()
     val sessions by vm.sessions.collectAsStateWithLifecycle()
     val scheduleEnabled by vm.scheduleEnabled.collectAsStateWithLifecycle()
@@ -230,6 +234,9 @@ fun HomeScreen(
             ) {
                 InfoChip(Icons.Outlined.Layers, preset?.let { presetTitle(it) } ?: "—")
                 InfoChip(Icons.Outlined.SimCard, stringResource(simLabel(snapshot?.slots?.let(::simModeOf) ?: simMode)))
+                if (contactsEnabled) {
+                    InfoChip(Icons.Outlined.PersonOff, stringResource(R.string.chip_contacts_active, contacts.size))
+                }
                 if (isOn && sinceMs > 0) {
                     InfoChip(Icons.Outlined.Timer, stringResource(R.string.chip_active_for, Format.duration(context, now - sinceMs)))
                 }
@@ -292,6 +299,24 @@ fun HomeScreen(
                 }
                 Text(
                     stringResource(R.string.action_change),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        GhostCard(onClick = onOpenContacts) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconBadge(Icons.Outlined.PersonOff)
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.contacts_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        if (contactsEnabled) stringResource(R.string.settings_contacts_summary_on, contacts.size) else stringResource(R.string.value_off),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                Text(
+                    stringResource(R.string.action_edit),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )

@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Optional update check against GitHub Releases (off by default). -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Optional: pick contacts directly for Ghost Contacts selective mode. -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <queries>
         <package android:name="moe.shizuku.privileged.api" />
@@ -71,6 +73,16 @@
             <meta-data
                 android:name="autoStoreLocales"
                 android:value="true" />
+        </service>
+
+        <!-- Call screening service to reject/silence incoming calls from selected ghost contacts. -->
+        <service
+            android:name=".screening.GhostCallScreeningService"
+            android:permission="android.permission.BIND_SCREENING_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService" />
+            </intent-filter>
         </service>
 
         <receiver

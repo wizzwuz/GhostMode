@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.PersonOff
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.Terminal
@@ -73,6 +74,7 @@ fun SettingsScreen(
     onNotificationToggle: (Boolean) -> Unit,
     onEditSchedule: () -> Unit,
     onAddTile: () -> Unit,
+    onOpenContacts: () -> Unit,
     onOpenDiagnostics: () -> Unit,
     onOpenLog: () -> Unit,
     onOpenStats: () -> Unit,
@@ -83,6 +85,8 @@ fun SettingsScreen(
     val scheduleEnabled by vm.scheduleEnabled.collectAsStateWithLifecycle()
     val scheduleStart by vm.scheduleStart.collectAsStateWithLifecycle()
     val scheduleEnd by vm.scheduleEnd.collectAsStateWithLifecycle()
+    val contactsEnabled by vm.ghostContactsEnabled.collectAsStateWithLifecycle()
+    val contacts by vm.ghostContacts.collectAsStateWithLifecycle()
     val themeMode by vm.themeMode.collectAsStateWithLifecycle()
     val dynamicColor by vm.dynamicColor.collectAsStateWithLifecycle()
     val updateCheck by vm.updateCheckEnabled.collectAsStateWithLifecycle()
@@ -112,6 +116,17 @@ fun SettingsScreen(
                 summary = stringResource(R.string.settings_notification_summary),
                 checked = notificationEnabled,
                 onCheckedChange = onNotificationToggle
+            )
+            Divider()
+            SettingsRow(
+                icon = Icons.Outlined.PersonOff,
+                title = stringResource(R.string.contacts_title),
+                summary = if (contactsEnabled) {
+                    stringResource(R.string.settings_contacts_summary_on, contacts.size)
+                } else {
+                    stringResource(R.string.value_off)
+                },
+                onClick = onOpenContacts
             )
             Divider()
             SettingsRow(

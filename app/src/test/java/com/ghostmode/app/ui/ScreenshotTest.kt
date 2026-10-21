@@ -44,7 +44,7 @@ class ScreenshotTest {
     private val now = System.currentTimeMillis()
     private val hour = 3_600_000L
 
-    private val host = AppHost({}, {}, {}, {}, {})
+    private val host = AppHost({}, {}, {}, {}, {}, {}, {}, {})
 
     private companion object {
         val LOCALES = mapOf("en" to "en-US", "ru" to "ru-RU")

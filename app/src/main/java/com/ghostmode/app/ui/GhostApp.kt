@@ -71,9 +71,9 @@ data class AppHost(
     val onOpenUrl: (String) -> Unit,
     val onImport: () -> Unit,
     val onExport: () -> Unit,
-    val onPickContact: () -> Unit,
-    val onRequestRole: () -> Unit,
-    val onOpenDialer: (String) -> Unit
+    val onPickContact: () -> Unit = {},
+    val onRequestRole: () -> Unit = {},
+    val onOpenDialer: (String) -> Unit = {}
 )
 
 @Composable
